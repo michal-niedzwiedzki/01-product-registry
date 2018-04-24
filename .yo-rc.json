@@ -1,0 +1,11 @@
+{
+  "generator-ts-truffle": {
+    "name": "01-product-registry",
+    "mainType": "project",
+    "author": "",
+    "contracts": [
+      "ProductRegistry"
+    ],
+    "solidityVersion": "0.4.19"
+  }
+}
