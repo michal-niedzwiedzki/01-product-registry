@@ -23,10 +23,23 @@ declare module 'project' {
       ): Promise<TransactionResult>;
     }
 
+    interface ProductDeregistered {
+      at: Address;
+    }
+  
     interface ProductRegistry extends ContractBase {
-      greetings: string;
+      
       owner: Address;
-      greet(): string;
+      getProductAddresses(): Promise<Address[]>;
+      registerProduct(
+        at: Address,
+        price: number,
+        options?: TransactionOptions
+      ): Promise<TransactionResult>;
+      deregisterProduct(
+        at: Address,
+        options?: TransactionOptions
+      ): Promise<TransactionResult>;
     }
 
     interface MigrationsContract extends Contract<Migrations> {
