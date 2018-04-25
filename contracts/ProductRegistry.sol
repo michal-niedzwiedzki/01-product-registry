@@ -21,7 +21,7 @@ import "node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol";
 contract ProductRegistry is Ownable() {
 
     string public greetings = "hi";
-
+/*
     struct Product {
         address at;
         uint price;
@@ -29,11 +29,11 @@ contract ProductRegistry is Ownable() {
 
     Product[] products;
     mapping (uint => address) productAddresses;
-
+*/
     function greet() external view returns (string) {
         return greetings;
     }
-
+/*
     function registerProduct(address at, uint price) public onlyOwner {
         require(price > 0);
         uint productId = products.push(Product(at, price)) - 1;
@@ -74,5 +74,5 @@ contract ProductRegistry is Ownable() {
         }
         return allAddresses;
     }
-
+*/
 }
