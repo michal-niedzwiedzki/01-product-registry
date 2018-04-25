@@ -8,7 +8,7 @@ declare module 'project' {
     TransactionResult,
     TruffleArtifacts
   } from 'truffle';
-    import { AnyNumber } from 'web3';
+  import { AnyNumber } from 'web3';
 
   namespace project {
     interface Migrations extends ContractBase {
@@ -22,21 +22,21 @@ declare module 'project' {
         options?: TransactionOptions
       ): Promise<TransactionResult>;
     }
-    
+
     interface ProductRegistry extends ContractBase {
-      
+      greetings: string;
+      owner: Address;
+      greet(): string;
     }
-    
-    
 
     interface MigrationsContract extends Contract<Migrations> {
       'new'(options?: TransactionOptions): Promise<Migrations>;
     }
-    
+
     interface ProductRegistryContract extends Contract<ProductRegistry> {
       'new'(options?: TransactionOptions): Promise<ProductRegistry>;
     }
-    
+
     interface ProjectArtifacts extends TruffleArtifacts {
       require(name: string): AnyContract;
       require(name: './Migrations.sol'): MigrationsContract;

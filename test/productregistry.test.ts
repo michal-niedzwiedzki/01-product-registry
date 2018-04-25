@@ -2,10 +2,7 @@ import { assert } from 'chai';
 
 import * as Web3 from 'web3';
 
-import {
-  ProductRegistry,
-  ProjectArtifacts,
-} from 'project';
+import { ProductRegistry, ProjectArtifacts } from 'project';
 
 import { ContractContextDefinition } from 'truffle';
 import {
@@ -22,8 +19,7 @@ declare const contract: ContractContextDefinition;
 const ProductRegistryContract = artifacts.require('./ProductRegistry.sol');
 
 contract('ProductRegistry', accounts => {
-
-console.log(accounts);
+  // console.log(accounts);
 
   const owner = accounts[9];
   const nonOwner = accounts[8];
@@ -35,17 +31,14 @@ console.log(accounts);
   });
 
   describe('#ctor', () => {
-
     it('should create', async () => {
       assert.isOk(registry);
-//      assert.equal(registry.owner, owner);
+// FIXME     assert.equal(registry.owner, owner); 
     });
 
     it('should greet', async () => {
-      assert.equal(registry.greetings, "hi");
-//      assert.equal((await registry.greet()), "hi");
+      assert.equal((await registry.greet()), "hi");
     });
-
   });
 
 });
