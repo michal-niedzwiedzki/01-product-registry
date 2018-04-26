@@ -90,6 +90,17 @@ contract('ProductRegistry', accounts => {
         await registry.deregisterProduct(product, { from: owner });
       });
     });
+
+    it('should deregister all products and emit', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      const tx = await registry.deregisterProduct(product, { from: owner });
+      assert.isEmpty(await registry.getProductAddresses());
+
+      const log = findLastLog(tx, 'ProductDeregistered');
+      const event = log.args as ProductDeregistered;
+      assert.equal(event.owner, product);
+    });
+
   });
 
   describe('Querying', () => {

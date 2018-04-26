@@ -37,6 +37,7 @@ contract ProductRegistry is Ownable {
 
     event ProductRegistered(address indexed owner, uint price);
     event ProductDeregistered(address indexed owner);
+    event AllProductsDeregistered();
 
     modifier productDoesExist(address owner) {
         uint productId = productIds[owner];
@@ -74,10 +75,25 @@ contract ProductRegistry is Ownable {
     productDoesExist(owner)
     {
         uint productId = productIds[owner];
-        products[productId] = Product({owner: 0, price: 0});
+        delete products[productId];
+        delete productIds[owner];
         productsCount--;
 
         ProductDeregistered(owner);
+    }
+
+    function deregisterAll()
+    external
+    onlyOwner
+    {
+        for (uint i = 0; i <= productsCount; i++) {
+            Product storage product = products[i];
+            delete productIds[product.owner];
+        }
+        delete products;
+        productsCount = 0;
+
+        AllProductsDeregistered();
     }
 
     function getProductAddresses()

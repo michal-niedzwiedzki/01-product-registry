@@ -43,6 +43,7 @@ declare module 'project' {
         owner: Address,
         options?: TransactionOptions
       ): Promise<TransactionResult>;
+      deregisterAll(): Promise<TransactionResult>;
       getProductAddresses(): Promise<Address[]>;
       isProductRegistered(at: Address): Promise<boolean>;
       getProductPrice(at: Address): Promise<number>;
