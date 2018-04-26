@@ -39,6 +39,18 @@ contract ProductRegistry is Ownable {
     event ProductRegistered(address indexed owner, uint price);
     event ProductDeregistered(address indexed owner);
 
+    modifier productDoesExist(address owner) {
+        uint productId = productIds[owner];
+        require(products.length != 0 && products[productId].owner == owner);
+        _;
+    }
+
+    modifier productDoesNotExist(address owner) {
+        uint productId = productIds[owner];
+        require(products.length == 0 || products[productId].owner != owner);
+        _;
+    }
+
     Product[] internal products;
     uint internal productsCount;
     mapping (address => uint) internal productIds;
@@ -46,17 +58,13 @@ contract ProductRegistry is Ownable {
     function registerProduct(address owner, uint price)
     external
     onlyOwner
+    productDoesNotExist(owner)
     {
-        uint productId = productIds[owner];
         Product memory product = Product({owner: owner, price: price, exists: true});
 
-        if (products.length == 0 || products[productId].owner != owner) {
-            productId = products.push(product) - 1;
-            productIds[owner] = productId;
-            productsCount++;
-        } else {
-            products[productId] = product;
-        }
+        uint productId = products.push(product) - 1;
+        productIds[owner] = productId;
+        productsCount++;
 
         ProductRegistered(owner, price);
     }
@@ -64,15 +72,12 @@ contract ProductRegistry is Ownable {
     function deregisterProduct(address owner)
     external
     onlyOwner
+    productDoesExist(owner)
     {
-        if (products.length == 0) {
-            return;
-        }
-
         uint productId = productIds[owner];
         Product storage product = products[productId];
 
-        if (product.exists && product.owner == owner) {
+        if (product.exists) {
             product.exists = false;
             productsCount--;
             ProductDeregistered(owner);
@@ -93,6 +98,7 @@ contract ProductRegistry is Ownable {
                 j++;
             }
         }
+
         return addresses;
     }
 
@@ -107,20 +113,19 @@ contract ProductRegistry is Ownable {
 
         uint productId = productIds[owner];
         Product storage product = products[productId];
+
         return product.exists && product.owner == owner;
     }
 
     function getProductPrice(address owner)
     external
     view
+    productDoesExist(owner)
     returns (uint)
     {
-        require(products.length != 0);
-
         uint productId = productIds[owner];
         Product storage product = products[productId];
-        require(product.exists && product.owner == owner);
-
+        
         return product.price;
     }
 
