@@ -26,8 +26,7 @@ const ProductRegistryContract = artifacts.require('./ProductRegistry.sol');
 contract('ProductRegistry', accounts => {
   const owner = accounts[9];
   const nonOwner = accounts[8];
-  const product1 = accounts[7];
-  const product2 = accounts[6];
+  const product = accounts[7];
 
   let registry: ProductRegistry;
 
@@ -46,125 +45,75 @@ contract('ProductRegistry', accounts => {
   describe('Registration', () => {
     it('should revert registering product as non-owner', async () => {
       await assertReverts(async () => {
-        await registry.registerProduct(product1, 100, { from: nonOwner });
+        await registry.registerProduct(product, 100, { from: nonOwner });
       });
     });
 
     it('should register product as owner and emit', async () => {
-      const tx1 = await registry.registerProduct(product1, 100, { from: owner });
-      const tx2 = await registry.registerProduct(product2, 200, { from: owner });
-      const log1 = findLastLog(tx1, 'ProductRegistered');
-      const log2 = findLastLog(tx2, 'ProductRegistered');
+      const tx = await registry.registerProduct(product, 100, { from: owner });
       const addresses = await registry.getProductAddresses();
-      assert.equal(addresses.length, 2);
-      assert.equal(addresses[0], product1);
-      assert.equal(addresses[1], product2);
-      assert.isOk(log1);
-      assert.isOk(log2);
-      const event1 = log1.args as ProductRegistered;
-      const event2 = log2.args as ProductRegistered;
-      assert.equal(event1.owner, product1);
-      assert.equal(event1.price, 100);
-      assert.equal(event2.owner, product2);
-      assert.equal(event2.price, 200);
+      assert.equal(addresses.length, 1);
+      assert.equal(addresses[0], product);
+      
+      const log = findLastLog(tx, 'ProductRegistered');
+      const event = log.args as ProductRegistered;
+      assert.isOk(log);
+      assert.equal(event.owner, product);
+      assert.equal(event.price, 100);
+
     });
 
-    it('should overwrite when registering existing product', async () => {
-      const tx1 = await registry.registerProduct(product1, 100, { from: owner });
-      const tx2 = await registry.registerProduct(product1, 101, { from: owner });
-      const tx3 = await registry.registerProduct(product2, 200, { from: owner });
-      const tx4 = await registry.registerProduct(product2, 201, { from: owner });
-      const log2 = findLastLog(tx2, 'ProductRegistered');
-      const log4 = findLastLog(tx4, 'ProductRegistered');
-      const addresses = await registry.getProductAddresses();
-
-      assert.equal(addresses.length, 2);
-      assert.equal(addresses[0], product1);
-      assert.equal(addresses[1], product2);
-      assert.isOk(log2);
-      assert.isOk(log4);
-
-      const event2 = log2.args as ProductRegistered;
-      const event4 = log4.args as ProductRegistered;
-      assert.equal(event2.owner, product1);
-      assert.equal(event2.price, 101);
-      assert.equal(event4.owner, product2);
-      assert.equal(event4.price, 201);
+    it('should revert if product already registered', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      await assertReverts(async () => {
+        await registry.registerProduct(product, 101, { from: owner });
+      });
     });
   });
 
   describe('Deregistration', () => {
     it('should revert deregistering product as non-owner', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
+      await registry.registerProduct(product, 100, { from: owner });
       await assertReverts(async () => {
-        await registry.deregisterProduct(product1, { from: nonOwner });
+        await registry.deregisterProduct(product, { from: nonOwner });
       });
     });
 
     it('should deregister product as owner and emit', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      await registry.deregisterProduct(product1, { from: owner });
+      await registry.registerProduct(product, 100, { from: owner });
+      await registry.deregisterProduct(product, { from: owner });
       assert.isEmpty(await registry.getProductAddresses());
     });
 
-    it('should not emit deregistering product from empty set', async () => {
-      const tx = await registry.deregisterProduct(product1, { from: owner });
-      const log = findLastLog(tx, 'ProductDeregistered');
-      assert.isUndefined(log);
-    });
-
-    it('should not emit deregistering product never registered', async () => {
-      const tx1 = await registry.registerProduct(product1, 100, {
-        from: owner
+    it('should revert deregistering not registered product', async () => {
+      await assertReverts(async () => {
+        await registry.deregisterProduct(product, { from: owner });
       });
-      const tx2 = await registry.deregisterProduct(product2, { from: owner });
-      const log2 = findLastLog(tx2, 'ProductDeregistered');
-      assert.isUndefined(log2);
-    });
-
-    it('should not emit deregistering when already deregistered', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      await registry.registerProduct(product2, 200, { from: owner });
-      await registry.deregisterProduct(product1, { from: owner });
-      await registry.deregisterProduct(product2, { from: owner });
-      const tx1 = await registry.deregisterProduct(product1, { from: owner });
-      const tx2 = await registry.deregisterProduct(product2, { from: owner });
-      const log1 = findLastLog(tx1, 'ProductDeregistered');
-      const log2 = findLastLog(tx2, 'ProductDeregistered');
-      assert.isUndefined(log1);
-      assert.isUndefined(log2);
     });
   });
 
   describe('Querying', () => {
-    it('for product should return false on empty set', async () => {
-      const isRegistered = await registry.isProductRegistered(product1);
+    it('should return false when product not found', async () => {
+      const isRegistered = await registry.isProductRegistered(product);
       assert.isFalse(isRegistered);
     });
 
-    it('for not registered product on non-empty set', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      const isRegistered = await registry.isProductRegistered(product2);
-      assert.isFalse(isRegistered);
-    });
-
-    it('for registered product should return true', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      const isRegistered = await registry.isProductRegistered(product1);
+    it('should return true when product found', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      const isRegistered = await registry.isProductRegistered(product);
       assert.isTrue(isRegistered);
     });
 
-    it('for deregistered product should return false', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      await registry.deregisterProduct(product1, { from: owner });
-      const isRegistered = await registry.isProductRegistered(product1);
-      assert.isFalse(isRegistered);
+    it('should return number for existing product', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      const price = await registry.getProductPrice(product);
+      assert.equal(price, 100);
     });
 
-    it('for price on registered product', async () => {
-      await registry.registerProduct(product1, 100, { from: owner });
-      const price = await registry.getProductPrice(product1);
-      assert.equal(price, 100);
+    it('should revert for non existing product', async () => {
+      await assertReverts(async () => {
+        await registry.getProductPrice(product);
+      });
     });
   });
 });
