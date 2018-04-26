@@ -51,12 +51,8 @@ contract('ProductRegistry', accounts => {
     });
 
     it('should register product as owner and emit', async () => {
-      const tx1 = await registry.registerProduct(product1, 100, {
-        from: owner
-      });
-      const tx2 = await registry.registerProduct(product2, 200, {
-        from: owner
-      });
+      const tx1 = await registry.registerProduct(product1, 100, { from: owner });
+      const tx2 = await registry.registerProduct(product2, 200, { from: owner });
       const log1 = findLastLog(tx1, 'ProductRegistered');
       const log2 = findLastLog(tx2, 'ProductRegistered');
       const addresses = await registry.getProductAddresses();
@@ -67,38 +63,32 @@ contract('ProductRegistry', accounts => {
       assert.isOk(log2);
       const event1 = log1.args as ProductRegistered;
       const event2 = log2.args as ProductRegistered;
-      assert.equal(event1.at, product1);
+      assert.equal(event1.owner, product1);
       assert.equal(event1.price, 100);
-      assert.equal(event2.at, product2);
+      assert.equal(event2.owner, product2);
       assert.equal(event2.price, 200);
     });
 
     it('should overwrite when registering existing product', async () => {
-      const tx1 = await registry.registerProduct(product1, 100, {
-        from: owner
-      });
-      const tx2 = await registry.registerProduct(product1, 101, {
-        from: owner
-      });
-      const tx3 = await registry.registerProduct(product2, 200, {
-        from: owner
-      });
-      const tx4 = await registry.registerProduct(product2, 201, {
-        from: owner
-      });
+      const tx1 = await registry.registerProduct(product1, 100, { from: owner });
+      const tx2 = await registry.registerProduct(product1, 101, { from: owner });
+      const tx3 = await registry.registerProduct(product2, 200, { from: owner });
+      const tx4 = await registry.registerProduct(product2, 201, { from: owner });
       const log2 = findLastLog(tx2, 'ProductRegistered');
       const log4 = findLastLog(tx4, 'ProductRegistered');
       const addresses = await registry.getProductAddresses();
+
       assert.equal(addresses.length, 2);
       assert.equal(addresses[0], product1);
       assert.equal(addresses[1], product2);
       assert.isOk(log2);
       assert.isOk(log4);
+
       const event2 = log2.args as ProductRegistered;
       const event4 = log4.args as ProductRegistered;
-      assert.equal(event2.at, product1);
+      assert.equal(event2.owner, product1);
       assert.equal(event2.price, 101);
-      assert.equal(event4.at, product2);
+      assert.equal(event4.owner, product2);
       assert.equal(event4.price, 201);
     });
   });

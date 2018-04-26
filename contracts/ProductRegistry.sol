@@ -16,49 +16,51 @@ import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Owna
 contract ProductRegistry is Ownable {
 
     struct Product {
-        address addr;
+        address owner;
         uint price;
         bool exists;
     }
 
-    event ProductRegistered(address indexed at, uint price);
-    event ProductDeregistered(address indexed at);
-    event DebugLookup(address searchedFor, uint foundId, uint productsCount); // TODO remove this afterwards
+    event ProductRegistered(address indexed owner, uint price);
+    event ProductDeregistered(address indexed owner);
 
     Product[] internal products;
     uint internal productsCount;
     mapping (address => uint) internal productIds;
 
-    function registerProduct(address at, uint price)
+    function registerProduct(address owner, uint price)
     external
     onlyOwner
     {
-        uint productId = productIds[at];
-        Product memory product = Product({addr: at, price: price, exists: true});
-        if (products.length == 0 || products[productId].addr != at) {
+        uint productId = productIds[owner];
+        Product memory product = Product({owner: owner, price: price, exists: true});
+
+        if (products.length == 0 || products[productId].owner != owner) {
             productId = products.push(product) - 1;
-            productIds[at] = productId;
+            productIds[owner] = productId;
             productsCount++;
         } else {
             products[productId] = product;
         }
-        ProductRegistered(at, price);
+
+        ProductRegistered(owner, price);
     }
 
-    function deregisterProduct(address at)
+    function deregisterProduct(address owner)
     external
     onlyOwner
     {
         if (products.length == 0) {
             return;
         }
-        uint productId = productIds[at];
-        DebugLookup(at, productId, products.length);
+
+        uint productId = productIds[owner];
         Product storage product = products[productId];
-        if (product.exists && product.addr == at) {
+
+        if (product.exists && product.owner == owner) {
             product.exists = false;
             productsCount--;
-            ProductDeregistered(at);
+            ProductDeregistered(owner);
         }
     }
 
@@ -71,14 +73,14 @@ contract ProductRegistry is Ownable {
         uint j = 0;
         for (uint i = 0; i < products.length; i++) {
             if (products[i].exists) {
-                addresses[j] = products[i].addr;
+                addresses[j] = products[i].owner;
                 j++;
             }
         }
         return addresses;
     }
 
-    function isProductRegistered(address at)
+    function isProductRegistered(address owner)
     external
     view
     returns (bool)
@@ -86,20 +88,20 @@ contract ProductRegistry is Ownable {
         if (products.length == 0) {
             return false;
         }
-        uint productId = productIds[at];
+        uint productId = productIds[owner];
         Product storage product = products[productId];
-        return product.exists && product.addr == at;
+        return product.exists && product.owner == owner;
     }
 
-    function getProductPrice(address at)
+    function getProductPrice(address owner)
     external
     view
     returns (uint)
     {
         require(products.length != 0);
-        uint productId = productIds[at];
+        uint productId = productIds[owner];
         Product storage product = products[productId];
-        require(product.exists && product.addr == at);
+        require(product.exists && product.owner == owner);
         return product.price;
     }
 

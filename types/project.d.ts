@@ -24,23 +24,23 @@ declare module 'project' {
     }
 
     interface ProductRegistered {
-      at: Address;
+      owner: Address;
       price: number;
     }
 
     interface ProductDeregistered {
-      at: Address;
+      owner: Address;
     }
 
     interface ProductRegistry extends ContractBase {
       owner: Address;
       registerProduct(
-        at: Address,
+        owner: Address,
         price: number,
         options?: TransactionOptions
       ): Promise<TransactionResult>;
       deregisterProduct(
-        at: Address,
+        owner: Address,
         options?: TransactionOptions
       ): Promise<TransactionResult>;
       getProductAddresses(): Promise<Address[]>;
