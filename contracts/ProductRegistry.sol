@@ -23,6 +23,13 @@ II
 + W solidity jestesmy nagradzani za zwalnianie pamieci, w funkcji deregisterProduct nie korzystamy z tego. Zastanow sie jak mozna by zmienic ta funkcje, i mozliwe ze sposob trzymania danych o licencjach, aby przy usuwaniu produktow zwalniac pamiet
 + w funkcji isProductRegistered 2gi warunek logiczny nie jest potrzebny: product.exists && product.addre == at. Dla produktu ktory nie jest zainicjalizowany wartosc exists bedzie miala domyslnie zawsze wartosc false
 
+III
+
++ Doimplementuj funkcje "deregisterAll" ktora owner moze usunac wszystkie zarejestrowane produkty
++ Sprobuj zaimplementowac alternatywna strukture trzymania danych o produktach, tak aby operacje usuniecia dowolnego produktu, iterowania sie po nich i dodawania kolejnych byly gazowo optymalne
+- Sprawdz obecne zuzycie gazu w funkcjach i zobacz czy da sie to zoptymalizowac
++ Jako hint: pomysl o zastapieniu tablicy produktow lista ze wskaznikami
+
 */
 
 import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -31,8 +38,9 @@ import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Owna
 contract ProductRegistry is Ownable {
 
     struct Product {
-        address owner;
+        uint id;
         uint price;
+        bool exists;
     }
 
     event ProductRegistered(address indexed owner, uint price);
@@ -40,31 +48,25 @@ contract ProductRegistry is Ownable {
     event AllProductsDeregistered();
 
     modifier productDoesExist(address owner) {
-        uint productId = productIds[owner];
-        require(products.length != 0 && products[productId].owner == owner);
+        require(products[owner].exists);
         _;
     }
 
     modifier productDoesNotExist(address owner) {
-        uint productId = productIds[owner];
-        require(products.length == 0 || products[productId].owner != owner);
+        require(!products[owner].exists);
         _;
     }
 
-    Product[] internal products;
-    uint internal productsCount;
-    mapping (address => uint) internal productIds;
+    mapping (address => Product) internal products;
+    address[] internal productsList;
 
     function registerProduct(address owner, uint price)
     external
     onlyOwner
     productDoesNotExist(owner)
     {
-        Product memory product = Product({owner: owner, price: price});
-
-        uint productId = products.push(product) - 1;
-        productIds[owner] = productId;
-        productsCount++;
+        uint productId = productsList.push(owner) - 1;
+        products[owner] = Product({id: productId, price: price, exists: true});
 
         ProductRegistered(owner, price);
     }
@@ -74,10 +76,8 @@ contract ProductRegistry is Ownable {
     onlyOwner
     productDoesExist(owner)
     {
-        uint productId = productIds[owner];
-        delete products[productId];
-        delete productIds[owner];
-        productsCount--;
+        delete productsList[products[owner].id];
+        delete products[owner];
 
         ProductDeregistered(owner);
     }
@@ -86,12 +86,11 @@ contract ProductRegistry is Ownable {
     external
     onlyOwner
     {
-        for (uint i = 0; i <= productsCount; i++) {
-            Product storage product = products[i];
-            delete productIds[product.owner];
+        for (uint i = 0; i <= productsList.length; i++) {
+            address productAddress = productsList[i];
+            delete products[productAddress];
         }
-        delete products;
-        productsCount = 0;
+        delete productsList;
 
         AllProductsDeregistered();
     }
@@ -101,13 +100,24 @@ contract ProductRegistry is Ownable {
     view
     returns (address[])
     {
-        address[] memory addresses = new address[](productsCount);
-        uint j = 0;
+        uint productsCount;
+        uint listedCount;
+        uint i;
+        address[] memory addresses;
 
-        for (uint i = 0; i < products.length; i++) {
-            if (products[i].owner != 0) {
-                addresses[j] = products[i].owner;
-                j++;
+        for (i = 0; i < productsList.length; i++) {
+            if (productsList[i] != 0) {
+                productsCount++;
+            }
+        }
+
+        addresses = new address[](productsCount);
+
+        for (i = 0; i < productsList.length; i++) {
+            address productAddress = productsList[i];
+            if (products[productAddress].exists) {
+                addresses[listedCount] = productAddress;
+                listedCount++;
             }
         }
 
@@ -119,14 +129,7 @@ contract ProductRegistry is Ownable {
     view
     returns (bool)
     {
-        if (products.length == 0) {
-            return false;
-        }
-
-        uint productId = productIds[owner];
-        Product storage product = products[productId];
-
-        return product.owner == owner;
+        return products[owner].exists;
     }
 
     function getProductPrice(address owner)
@@ -135,10 +138,7 @@ contract ProductRegistry is Ownable {
     productDoesExist(owner)
     returns (uint)
     {
-        uint productId = productIds[owner];
-        Product storage product = products[productId];
-
-        return product.price;
+        return products[owner].price;
     }
 
 }
