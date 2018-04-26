@@ -18,16 +18,12 @@ contract ProductRegistry is Ownable {
     struct Product {
         address addr;
         uint price;
-        bool isLive;
+        bool exists;
     }
 
     event ProductRegistered(address indexed at, uint price);
     event ProductDeregistered(address indexed at);
-
-    modifier productDoesNotExist(address at) {
-        require(products.length == 0 || products[productIds[at]].isLive == false);
-        _;
-    }
+    event DebugLookup(address searchedFor, uint foundId, uint productsCount); // TODO remove this afterwards
 
     Product[] internal products;
     uint internal productsCount;
@@ -36,11 +32,16 @@ contract ProductRegistry is Ownable {
     function registerProduct(address at, uint price)
     external
     onlyOwner
-    productDoesNotExist(at)
     {
-        uint productId = products.push(Product(at, price, true)) - 1;
-        productIds[at] = productId;
-        productsCount++;
+        uint productId = productIds[at];
+        Product memory product = Product({addr: at, price: price, exists: true});
+        if (products.length == 0 || products[productId].addr != at) {
+            productId = products.push(product) - 1;
+            productIds[at] = productId;
+            productsCount++;
+        } else {
+            products[productId] = product;
+        }
         ProductRegistered(at, price);
     }
 
@@ -52,9 +53,10 @@ contract ProductRegistry is Ownable {
             return;
         }
         uint productId = productIds[at];
+        DebugLookup(at, productId, products.length);
         Product storage product = products[productId];
-        if (product.isLive) {
-            product.isLive = false;
+        if (product.exists && product.addr == at) {
+            product.exists = false;
             productsCount--;
             ProductDeregistered(at);
         }
@@ -68,12 +70,37 @@ contract ProductRegistry is Ownable {
         address[] memory addresses = new address[](productsCount);
         uint j = 0;
         for (uint i = 0; i < products.length; i++) {
-            if (products[i].isLive) {
+            if (products[i].exists) {
                 addresses[j] = products[i].addr;
                 j++;
             }
         }
         return addresses;
+    }
+
+    function isProductRegistered(address at)
+    external
+    view
+    returns (bool)
+    {
+        if (products.length == 0) {
+            return false;
+        }
+        uint productId = productIds[at];
+        Product storage product = products[productId];
+        return product.exists && product.addr == at;
+    }
+
+    function getProductPrice(address at)
+    external
+    view
+    returns (uint)
+    {
+        require(products.length != 0);
+        uint productId = productIds[at];
+        Product storage product = products[productId];
+        require(product.exists && product.addr == at);
+        return product.price;
     }
 
 }

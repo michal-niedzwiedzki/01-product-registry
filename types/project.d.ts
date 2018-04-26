@@ -23,14 +23,17 @@ declare module 'project' {
       ): Promise<TransactionResult>;
     }
 
+    interface ProductRegistered {
+      at: Address;
+      price: number;
+    }
+
     interface ProductDeregistered {
       at: Address;
     }
-  
+
     interface ProductRegistry extends ContractBase {
-      
       owner: Address;
-      getProductAddresses(): Promise<Address[]>;
       registerProduct(
         at: Address,
         price: number,
@@ -40,6 +43,9 @@ declare module 'project' {
         at: Address,
         options?: TransactionOptions
       ): Promise<TransactionResult>;
+      getProductAddresses(): Promise<Address[]>;
+      isProductRegistered(at: Address): Promise<boolean>;
+      getProductPrice(at: Address): Promise<number>;
     }
 
     interface MigrationsContract extends Contract<Migrations> {
