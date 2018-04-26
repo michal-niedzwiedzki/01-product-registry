@@ -17,11 +17,11 @@ II
 + Zmienilbym nazwe pola "addr" w strukturze na inna ktora by lepiej sugerowala co adres oznacza. W tym przypadku np. "owner"
 + Debugowy event powinien byc usuniety
 + Wizualnie kod jest bardzo zbity, dalbym entery np. przed / po bloku if. rozdzielil inicjalizacje zmiennych itp.
-- Funkcje powinny logicznie byc rozbite na sprawdzanie warunkow (np. if(products.length == 0) return) i faktyczna logike funkcji. Najlepiej zrobic to za pomoca modifier-ow. 
-- Powyzszy warunek powtarza sie w kodzie pare razy, uzycie modifiera rozwiazalo by problem duplikacji kodu
-- Nie ma potrzeby zeby wlasciciel byl w stanie edytowac cene produktu. W tym systemie wartosc raz zakupionego produktu powinna byc nie zmienna. Jezeli wlasciciel bedzie chcial zmienic cene, moze to zrobic tworzac nowy produkt i konfigurujac sprzedawany program tak aby akceptowal oba ID produktu jako poprawne licencje. Usuniecie tej logiki z funkcji registerProduct uprosci jej implementacje
-- W solidity jestesmy nagradzani za zwalnianie pamieci, w funkcji deregisterProduct nie korzystamy z tego. Zastanow sie jak mozna by zmienic ta funkcje, i mozliwe ze sposob trzymania danych o licencjach, aby przy usuwaniu produktow zwalniac pamiet
-- w funkcji isProductRegistered 2gi warunek logiczny nie jest potrzebny: product.exists && product.addre == at. Dla produktu ktory nie jest zainicjalizowany wartosc exists bedzie miala domyslnie zawsze wartosc false
++ Funkcje powinny logicznie byc rozbite na sprawdzanie warunkow (np. if(products.length == 0) return) i faktyczna logike funkcji. Najlepiej zrobic to za pomoca modifier-ow. 
++ Powyzszy warunek powtarza sie w kodzie pare razy, uzycie modifiera rozwiazalo by problem duplikacji kodu
++ Nie ma potrzeby zeby wlasciciel byl w stanie edytowac cene produktu. W tym systemie wartosc raz zakupionego produktu powinna byc nie zmienna. Jezeli wlasciciel bedzie chcial zmienic cene, moze to zrobic tworzac nowy produkt i konfigurujac sprzedawany program tak aby akceptowal oba ID produktu jako poprawne licencje. Usuniecie tej logiki z funkcji registerProduct uprosci jej implementacje
++ W solidity jestesmy nagradzani za zwalnianie pamieci, w funkcji deregisterProduct nie korzystamy z tego. Zastanow sie jak mozna by zmienic ta funkcje, i mozliwe ze sposob trzymania danych o licencjach, aby przy usuwaniu produktow zwalniac pamiet
++ w funkcji isProductRegistered 2gi warunek logiczny nie jest potrzebny: product.exists && product.addre == at. Dla produktu ktory nie jest zainicjalizowany wartosc exists bedzie miala domyslnie zawsze wartosc false
 
 */
 
@@ -33,7 +33,6 @@ contract ProductRegistry is Ownable {
     struct Product {
         address owner;
         uint price;
-        bool exists;
     }
 
     event ProductRegistered(address indexed owner, uint price);
@@ -60,7 +59,7 @@ contract ProductRegistry is Ownable {
     onlyOwner
     productDoesNotExist(owner)
     {
-        Product memory product = Product({owner: owner, price: price, exists: true});
+        Product memory product = Product({owner: owner, price: price});
 
         uint productId = products.push(product) - 1;
         productIds[owner] = productId;
@@ -75,13 +74,10 @@ contract ProductRegistry is Ownable {
     productDoesExist(owner)
     {
         uint productId = productIds[owner];
-        Product storage product = products[productId];
+        products[productId] = Product({owner: 0, price: 0});
+        productsCount--;
 
-        if (product.exists) {
-            product.exists = false;
-            productsCount--;
-            ProductDeregistered(owner);
-        }
+        ProductDeregistered(owner);
     }
 
     function getProductAddresses()
@@ -93,7 +89,7 @@ contract ProductRegistry is Ownable {
         uint j = 0;
 
         for (uint i = 0; i < products.length; i++) {
-            if (products[i].exists) {
+            if (products[i].owner != 0) {
                 addresses[j] = products[i].owner;
                 j++;
             }
@@ -114,7 +110,7 @@ contract ProductRegistry is Ownable {
         uint productId = productIds[owner];
         Product storage product = products[productId];
 
-        return product.exists && product.owner == owner;
+        return product.owner == owner;
     }
 
     function getProductPrice(address owner)
@@ -125,7 +121,7 @@ contract ProductRegistry is Ownable {
     {
         uint productId = productIds[owner];
         Product storage product = products[productId];
-        
+
         return product.price;
     }
 
