@@ -38,9 +38,7 @@ import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Owna
 contract ProductRegistry is Ownable {
 
     struct Product {
-        uint id;
         uint price;
-        bool exists;
     }
 
     event ProductRegistered(address indexed owner, uint price);
@@ -48,12 +46,12 @@ contract ProductRegistry is Ownable {
     event AllProductsDeregistered();
 
     modifier productDoesExist(address owner) {
-        require(products[owner].exists);
+        require(products[owner].price != 0);
         _;
     }
 
     modifier productDoesNotExist(address owner) {
-        require(!products[owner].exists);
+        require(products[owner].price == 0);
         _;
     }
 
@@ -65,8 +63,10 @@ contract ProductRegistry is Ownable {
     onlyOwner
     productDoesNotExist(owner)
     {
-        uint productId = productsList.push(owner) - 1;
-        products[owner] = Product({id: productId, price: price, exists: true});
+        require(price != 0);
+
+        productsList.push(owner);
+        products[owner] = Product({price: price});
 
         ProductRegistered(owner, price);
     }
@@ -76,7 +76,12 @@ contract ProductRegistry is Ownable {
     onlyOwner
     productDoesExist(owner)
     {
-        delete productsList[products[owner].id];
+        for (uint i = 0; i < productsList.length; i++) {
+            if (productsList[i] == owner) {
+                delete productsList[i];
+            }
+        }
+
         delete products[owner];
 
         ProductDeregistered(owner);
@@ -115,7 +120,7 @@ contract ProductRegistry is Ownable {
 
         for (i = 0; i < productsList.length; i++) {
             address productAddress = productsList[i];
-            if (products[productAddress].exists) {
+            if (products[productAddress].price != 0) {
                 addresses[listedCount] = productAddress;
                 listedCount++;
             }
@@ -129,7 +134,7 @@ contract ProductRegistry is Ownable {
     view
     returns (bool)
     {
-        return products[owner].exists;
+        return products[owner].price != 0;
     }
 
     function getProductPrice(address owner)
