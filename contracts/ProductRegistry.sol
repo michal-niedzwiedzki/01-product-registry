@@ -30,6 +30,10 @@ III
 - Sprawdz obecne zuzycie gazu w funkcjach i zobacz czy da sie to zoptymalizowac
 + Jako hint: pomysl o zastapieniu tablicy produktow lista ze wskaznikami
 
+IV
+
+- przetestuj implementacje gdzie jest tylko mapping products, ale w strukturze Product przechowujesz wskaznik do kolejnego produktu
+
 */
 
 import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -39,6 +43,7 @@ contract ProductRegistry is Ownable {
 
     struct Product {
         uint price;
+        address next;
     }
 
     event ProductRegistered(address indexed owner, uint price);
@@ -55,18 +60,24 @@ contract ProductRegistry is Ownable {
         _;
     }
 
+    modifier hasPrice(uint price) {
+        require(price != 0);
+        _;
+    }
+
     mapping (address => Product) internal products;
-    address[] internal productsList;
+    address productsHead;
 
     function registerProduct(address owner, uint price)
     external
     onlyOwner
     productDoesNotExist(owner)
+    hasPrice(price)
     {
-        require(price != 0);
-
-        productsList.push(owner);
-        products[owner] = Product({price: price});
+        products[owner] = Product({price: price, next: 0});
+        if (productsHead == 0) {
+            productsHead = owner;
+        }
 
         ProductRegistered(owner, price);
     }
@@ -76,12 +87,9 @@ contract ProductRegistry is Ownable {
     onlyOwner
     productDoesExist(owner)
     {
-        for (uint i = 0; i < productsList.length; i++) {
-            if (productsList[i] == owner) {
-                delete productsList[i];
-            }
+        if (productsHead == owner) {
+            productsHead = products[owner].next;
         }
-
         delete products[owner];
 
         ProductDeregistered(owner);
@@ -91,11 +99,10 @@ contract ProductRegistry is Ownable {
     external
     onlyOwner
     {
-        for (uint i = 0; i <= productsList.length; i++) {
-            address productAddress = productsList[i];
-            delete products[productAddress];
+        for (address currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
+            delete products[currentAddress];
         }
-        delete productsList;
+        delete productsHead;
 
         AllProductsDeregistered();
     }
@@ -105,25 +112,19 @@ contract ProductRegistry is Ownable {
     view
     returns (address[])
     {
-        uint productsCount;
-        uint listedCount;
-        uint i;
         address[] memory addresses;
-
-        for (i = 0; i < productsList.length; i++) {
-            if (productsList[i] != 0) {
-                productsCount++;
-            }
+        address currentAddress;
+        uint productsCount;
+        uint i;
+        
+        for (currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
+            productsCount++;
         }
 
         addresses = new address[](productsCount);
-
-        for (i = 0; i < productsList.length; i++) {
-            address productAddress = productsList[i];
-            if (products[productAddress].price != 0) {
-                addresses[listedCount] = productAddress;
-                listedCount++;
-            }
+        for (currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
+            addresses[i] = currentAddress;
+            i++;
         }
 
         return addresses;

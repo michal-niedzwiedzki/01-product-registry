@@ -78,15 +78,9 @@ contract('ProductRegistry', accounts => {
       });
     });
 
-    it.only('should deregister product as owner and emit', async () => {
-      for (var i = 0; i <= accounts.length - 1; ++i) {
-        await registry.registerProduct(accounts[i], 100, { from: owner });
-      }
-
-//      await registry.registerProduct(accounts[0], 100, { from: owner });
-      const tx = await registry.deregisterProduct(accounts[9], { from: owner });
-console.log(accounts.length);
-console.log(tx);
+    it('should deregister product as owner and emit', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      const tx = await registry.deregisterProduct(product, { from: owner });
       assert.isEmpty(await registry.getProductAddresses());
     });
 
