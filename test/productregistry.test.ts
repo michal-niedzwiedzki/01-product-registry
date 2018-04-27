@@ -31,13 +31,17 @@ contract('ProductRegistry', accounts => {
   let registry: ProductRegistry;
 
   beforeEach(async () => {
-    registry = await ProductRegistryContract.new({ from: owner });
+    registry = await ProductRegistryContract.new(owner, { from: owner });
   });
 
   describe('Constructor', () => {
     it('should create with empty product set', async () => {
       assert.isOk(registry);
+
+      const productsCount = await registry.getProductsCount();
       const addresses = await registry.getProductAddresses();
+
+      assert.equal(productsCount, 0);
       assert.isEmpty(addresses);
     });
   });
@@ -54,7 +58,7 @@ contract('ProductRegistry', accounts => {
       const addresses = await registry.getProductAddresses();
       assert.equal(addresses.length, 1);
       assert.equal(addresses[0], product);
-      
+
       const log = findLastLog(tx, 'ProductRegistered');
       const event = log.args as ProductRegistered;
       assert.isOk(log);
@@ -116,8 +120,7 @@ contract('ProductRegistry', accounts => {
 
     it('should return number for existing product', async () => {
       await registry.registerProduct(product, 100, { from: owner });
-      const price = await registry.getProductPrice(product);
-      assert.equal(price, 100);
+      assert.equal(await registry.getProductsCount(), 1);
     });
 
     it('should revert for non existing product', async () => {

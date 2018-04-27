@@ -47,6 +47,11 @@ declare module 'project' {
       getProductAddresses(): Promise<Address[]>;
       isProductRegistered(at: Address): Promise<boolean>;
       getProductPrice(at: Address): Promise<number>;
+      getProductsCount(): Promise<number>;
+    }
+
+    interface RegistryConsumer extends ContractBase {
+      getProducts(): Promise<Address[]>;
     }
 
     interface MigrationsContract extends Contract<Migrations> {
@@ -54,13 +59,24 @@ declare module 'project' {
     }
 
     interface ProductRegistryContract extends Contract<ProductRegistry> {
-      'new'(options?: TransactionOptions): Promise<ProductRegistry>;
+      'new'(
+        owner: Address,
+        options?: TransactionOptions
+      ): Promise<ProductRegistry>;
+    }
+
+    interface RegistryConsumerContract extends Contract<RegistryConsumer> {
+      'new'(
+        registryAddress: Address,
+        options?: TransactionOptions
+      ): Promise<RegistryConsumer>;
     }
 
     interface ProjectArtifacts extends TruffleArtifacts {
       require(name: string): AnyContract;
       require(name: './Migrations.sol'): MigrationsContract;
       require(name: './ProductRegistry.sol'): ProductRegistryContract;
+      require(name: './RegistryConsumer.sol'): RegistryConsumerContract;
     }
   }
 

@@ -147,4 +147,24 @@ contract ProductRegistry is Ownable {
         return products[owner].price;
     }
 
+    function getProductsCount()
+    external
+    view
+    returns (uint)
+    {
+        uint productsCount;
+        for (address currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
+            productsCount++;
+        }
+        return productsCount;
+    }
+
+    function getNextAddress(address from)
+    external
+    view
+    returns (address)
+    {
+        return (from == 0) ? productsHead : products[from].next;
+    }
+
 }
