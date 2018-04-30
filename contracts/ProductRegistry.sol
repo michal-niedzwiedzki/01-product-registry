@@ -75,8 +75,15 @@ contract ProductRegistry is Ownable {
     hasPrice(price)
     {
         products[owner] = Product({price: price, next: 0});
+
         if (productsHead == 0) {
             productsHead = owner;
+        } else {
+            address lastAddress = productsHead;
+            while (products[lastAddress].next != 0) {
+                lastAddress = products[lastAddress].next;
+            }
+            products[lastAddress].next = owner;
         }
 
         ProductRegistered(owner, price);
