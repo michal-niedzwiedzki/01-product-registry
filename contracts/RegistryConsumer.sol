@@ -9,7 +9,7 @@ mozesz sie powoli zabrac za przetestowanie jak wyglada wywolywanie jednego kontr
 */
 
 
-contract ProductRegistryInterface {
+interface ProductRegistryInterface {
 
     function getNextAddress(address at) external view returns (address);
     function getProductsCount() external view returns (uint);
