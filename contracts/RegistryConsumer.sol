@@ -39,7 +39,7 @@ contract RegistryConsumer {
         for (uint i = 0; i < productsCount; i++) {
             current = registry.getNextAddress(current);
             addresses[i] = current;
-        }
+            }
 
         return addresses;
     }

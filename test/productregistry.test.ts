@@ -16,6 +16,7 @@ import {
   findLastLog,
   ZERO_ADDRESS
 } from './helpers';
+import { Address } from 'utils';
 
 declare const web3: Web3;
 declare const artifacts: ProjectArtifacts;
@@ -127,6 +128,11 @@ contract('ProductRegistry', accounts => {
       await assertReverts(async () => {
         await registry.getProductPrice(product);
       });
+    });
+    it('should return next product', async () => {
+      await registry.registerProduct(product, 100, { from: owner });
+      assert.equal(await registry.getNextAddress("0x0000000000000000000000000000000000000000"), product);
+      assert.equal(await registry.getNextAddress(product), "0x0000000000000000000000000000000000000000");
     });
   });
 });

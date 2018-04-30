@@ -48,6 +48,7 @@ declare module 'project' {
       isProductRegistered(at: Address): Promise<boolean>;
       getProductPrice(at: Address): Promise<number>;
       getProductsCount(): Promise<number>;
+      getNextAddress(from: Address): Promise<Address>;
     }
 
     interface RegistryConsumer extends ContractBase {
