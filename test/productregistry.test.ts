@@ -28,6 +28,8 @@ contract('ProductRegistry', accounts => {
   const owner = accounts[9];
   const nonOwner = accounts[8];
   const product = accounts[7];
+  const anotherProduct = accounts[6];
+  const noProduct = "0x0000000000000000000000000000000000000000";
 
   let registry: ProductRegistry;
 
@@ -129,10 +131,13 @@ contract('ProductRegistry', accounts => {
         await registry.getProductPrice(product);
       });
     });
-    it('should return next product', async () => {
+    it('should return next product or zero if last', async () => {
       await registry.registerProduct(product, 100, { from: owner });
-      assert.equal(await registry.getNextAddress("0x0000000000000000000000000000000000000000"), product);
-      assert.equal(await registry.getNextAddress(product), "0x0000000000000000000000000000000000000000");
+      await registry.registerProduct(anotherProduct, 100, { from: owner });
+
+      assert.equal(await registry.getNextAddress(noProduct), product);
+      assert.equal(await registry.getNextAddress(product), anotherProduct);
+      assert.equal(await registry.getNextAddress(anotherProduct), noProduct);
     });
   });
 });

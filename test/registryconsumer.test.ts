@@ -26,7 +26,8 @@ const RegistryConsumerContract = artifacts.require('./RegistryConsumer.sol');
 contract('RegistryConsumer', accounts => {
   const registryOwner = accounts[9];
   const consumerOwner = accounts[8];
-  const product = accounts[7];
+  const product1 = accounts[7];
+  const product2 = accounts[6];
 
   let registry: ProductRegistry;
   let consumer: RegistryConsumer;
@@ -45,11 +46,13 @@ contract('RegistryConsumer', accounts => {
 
   describe('Querying', () => {
     it('should return product addresses', async () => {
-      await registry.registerProduct(product, 100, { from: registryOwner });
+      await registry.registerProduct(product1, 100, { from: registryOwner });
+      await registry.registerProduct(product2, 100, { from: registryOwner });
       const addresses = await consumer.getProducts();
 
-      assert.equal(addresses.length, 1);
-      assert.equal(addresses[0], product);
+      assert.equal(addresses.length, 2);
+      assert.equal(addresses[0], product1);
+      assert.equal(addresses[1], product2);
     });
   });
 });

@@ -21,7 +21,7 @@ contract RegistryConsumer {
 
     ProductRegistryInterface registry;
 
-    function Consumer(address registryAddress)
+    function RegistryConsumer(address registryAddress)
     public
     {
         registry = ProductRegistryInterface(registryAddress);
