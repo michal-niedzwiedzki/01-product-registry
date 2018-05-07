@@ -55,4 +55,20 @@ contract('RegistryConsumer', accounts => {
       assert.equal(addresses[1], product2);
     });
   });
+  describe('Filtering', () => {
+    it('should return all products on always-truthy callback', async () => {
+      await registry.registerProduct(product1, 1000, { from: registryOwner });
+      await registry.registerProduct(product2, 1000, { from: registryOwner });
+
+      assert.equal(await registry.getFilteredCount(consumerOwner), 2);
+    });
+  });
+  describe('Filtering', () => {
+    it('should return no product on always-falsey callback', async () => {
+      await registry.registerProduct(product1, 1, { from: registryOwner });
+      await registry.registerProduct(product2, 1, { from: registryOwner });
+
+      assert.equal(await registry.getFilteredCount(consumerOwner), 0);
+    });
+  });
 });

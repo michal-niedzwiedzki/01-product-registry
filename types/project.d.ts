@@ -49,10 +49,12 @@ declare module 'project' {
       getProductPrice(at: Address): Promise<number>;
       getProductsCount(): Promise<number>;
       getNextAddress(from: Address): Promise<Address>;
+      getFilteredCount(target: Address): Promise<number>;
     }
 
     interface RegistryConsumer extends ContractBase {
       getProducts(): Promise<Address[]>;
+      filterProduct(price: number): Promise<boolean>;
     }
 
     interface MigrationsContract extends Contract<Migrations> {

@@ -39,6 +39,15 @@ IV
 import { Ownable } from "node_modules/zeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
+interface ProductFilter {
+
+    function filterProduct (uint price)
+    external
+    view
+    returns (bool);
+
+}
+
 contract ProductRegistry is Ownable {
 
     struct Product {
@@ -172,6 +181,23 @@ contract ProductRegistry is Ownable {
     returns (address)
     {
         return (from == 0) ? productsHead : products[from].next;
+    }
+
+    function getFilteredCount(address target)
+    external
+    view
+    returns (uint)
+    {
+        uint productsCount;
+        ProductFilter filter = ProductFilter(target);
+        for (address currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
+            /* solhint-disable avoid-call-value */
+            if (filter.filterProduct(products[currentAddress].price)) {
+                productsCount++;
+            }
+            /* solhint-enable avoid-call-value */
+        }
+        return productsCount;
     }
 
 }

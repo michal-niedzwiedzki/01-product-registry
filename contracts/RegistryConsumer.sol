@@ -11,8 +11,20 @@ mozesz sie powoli zabrac za przetestowanie jak wyglada wywolywanie jednego kontr
 
 interface ProductRegistryInterface {
 
-    function getNextAddress(address at) external view returns (address);
-    function getProductsCount() external view returns (uint);
+    function getNextAddress(address at)
+    external
+    view
+    returns (address);
+
+    function getProductsCount()
+    external
+    view
+    returns (uint);
+
+    function getFilteredCount(address, function (uint) external pure returns (bool))
+    external
+    view
+    returns (uint);
 
 }
 
@@ -42,6 +54,22 @@ contract RegistryConsumer {
             }
 
         return addresses;
+    }
+
+    function filterProduct (uint price)
+    external
+    pure
+    returns (bool)
+    {
+        return price >= 100;
+    }
+
+    function getExpensiveCount()
+    external
+    view
+    returns (uint)
+    {
+        return registry.getFilteredCount(this, this.filterProduct);
     }
 
 }
