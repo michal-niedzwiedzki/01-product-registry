@@ -168,7 +168,7 @@ contract ProductRegistry is Ownable {
     view
     returns (uint)
     {
-        uint productsCount;
+        uint productsCount = 0;
         for (address currentAddress = productsHead; currentAddress != 0; currentAddress = products[currentAddress].next) {
             productsCount++;
         }
