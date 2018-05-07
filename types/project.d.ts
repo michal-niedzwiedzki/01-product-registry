@@ -52,6 +52,7 @@ declare module 'project' {
     }
 
     interface RegistryConsumer extends ContractBase {
+      registry: ProductRegistryContract;
       getProducts(): Promise<Address[]>;
     }
 
