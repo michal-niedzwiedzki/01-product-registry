@@ -3,10 +3,12 @@ import { Deployer } from 'truffle';
 
 declare const artifacts: ProjectArtifacts;
 
+const ProductRegistry = artifacts.require('./ProductRegistry.sol');
 const RegistryConsumer = artifacts.require('./RegistryConsumer.sol');
 
 async function deploy(deployer: Deployer) {
-  await deployer.deploy(RegistryConsumer);
+  const registry = await ProductRegistry.deployed();
+  await deployer.deploy(RegistryConsumer, registry.address);
 }
 
 function migrate(deployer: Deployer) {
