@@ -183,7 +183,7 @@ contract ProductRegistry is Ownable {
         return (from == 0) ? productsHead : products[from].next;
     }
 
-    function getFilteredCount(address target)
+    function getFilteredCount(ProductFilter target)
     external
     view
     returns (uint)

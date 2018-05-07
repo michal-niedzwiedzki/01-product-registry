@@ -60,7 +60,7 @@ contract('RegistryConsumer', accounts => {
       await registry.registerProduct(product1, 1000, { from: registryOwner });
       await registry.registerProduct(product2, 1000, { from: registryOwner });
 
-      assert.equal(await registry.getFilteredCount(consumerOwner), 2);
+      assert.equal(await registry.getFilteredCount(consumer), 2);
     });
   });
   describe('Filtering', () => {
@@ -68,7 +68,7 @@ contract('RegistryConsumer', accounts => {
       await registry.registerProduct(product1, 1, { from: registryOwner });
       await registry.registerProduct(product2, 1, { from: registryOwner });
 
-      assert.equal(await registry.getFilteredCount(consumerOwner), 0);
+      assert.equal(await registry.getFilteredCount(consumer), 0);
     });
   });
 });

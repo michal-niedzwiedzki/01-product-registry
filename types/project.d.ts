@@ -32,6 +32,10 @@ declare module 'project' {
       owner: Address;
     }
 
+    interface ProductFilter {
+      filterProduct(price: number): Promise<boolean>;
+    }
+
     interface ProductRegistry extends ContractBase {
       owner: Address;
       registerProduct(
@@ -49,7 +53,7 @@ declare module 'project' {
       getProductPrice(at: Address): Promise<number>;
       getProductsCount(): Promise<number>;
       getNextAddress(from: Address): Promise<Address>;
-      getFilteredCount(target: Address): Promise<number>;
+      getFilteredCount(target: ProductFilter): Promise<number>;
     }
 
     interface RegistryConsumer extends ContractBase {
